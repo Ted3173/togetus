@@ -1,0 +1,21 @@
+#define _CRT_SECURE_NO_WARNINGS // scanf를 사용하기 위해서 전처리기 사용
+#include <stdio.h>		// 입출력 함수를 사용하기 위해서 전처리기 사용 
+
+int main(void) {
+	int n, k;				// 변수 선언
+	int isum = 0, i=1;
+
+	printf("1부터 기준이 될 구간과 그 구간 안에서의 배수의 기준이 될 수를 입력하세요 :"); 
+	scanf("%d%d", &n, &k);		// 구간과 배수의 기준이 될 수에 값 대입
+
+	
+		if (k > n) {		// 배수가 구간보다 더 클 경우 오류 발생
+			printf("%d는 %d보다 작아야 합니다.", k, n);			
+		}
+		while (n >= k*i) {				// k의 배수가 구간 n보다 커지기 전까지 반복문 수행
+			isum += k * i;				// k의 배수가 구간 n보다 커지기 전까지 합하여 총합을 isum변수에 저장
+			i++;						
+		}
+	printf("%d배수의 총합은 %d입니다.", k, isum);		// 1부터 구간 n에서의 k배수의 총합을 출력
+	return 0;
+}
