@@ -1,0 +1,137 @@
+#!/usr/bin/tclsh
+
+file delete {*}[glob *.rpt]
+
+set block [open ./block.list r]
+while { [gets $block bline] >= 0 } {
+	set block_length [llength [ set block_list_last [ split $bline "/" ]]]
+	lappend last [lindex $block_list_last [expr $block_length - 1]]
+			puts $last
+} 
+
+
+set report [open ../../report_constraint_verbose r]
+while { [gets $report line] >= 0 } {
+	lappend GGALGGEUM $line
+	if [ string match "*Startpoint:*" $line ] {
+		
+		set start_point [ lindex $line 1 ]
+		set count [ expr [ llength [split $start_point "/" ] ] -1 ]
+		set start_path [ lindex [ split $start_point "/" ] $count ]
+			while { 1 } {
+			set a [lsearch $last $start_path]
+				if { $a == -1 } {
+					incr count $a
+						if { $count < 0 } {
+							set from top_only
+							break
+						}
+					set start_path [ lindex [ split $start_point "/" ] $count ]
+				} else {
+				set from [ lindex $last $a ]
+				break
+				}
+			}
+	} elseif [ string match "*Endpoint:*" $line ] {
+		
+		set end_point [ lindex $line 1 ]
+		set count [ expr [ llength [split $end_point "/" ] ] -1 ]
+		set end_path [ lindex [ split $end_point "/" ] $count ]
+			while { 1 } {
+			set a [lsearch $last $end_path]
+				if { $a == -1 } {
+					incr count $a
+						if { $count < 0 } {
+							set to top_only
+							break
+						}
+					set end_path [ lindex [ split $end_point "/" ] $count ]
+				} else {
+				set to [ lindex $last $a ]
+				break
+				}
+			}
+
+	} elseif [ string match "*slack (VIOLATED)*" $line ] {
+		if { $from == $to } {
+			if {[file exists $from.rpt] == 0} {
+				set rpt [open $from.rpt w]
+				foreach element $GGALGGEUM {
+					puts $rpt $element
+				}
+					close $rpt
+					unset GGALGGEUM
+			} elseif {[file exists $from.rpt] == 1} {
+				set rpt [open $from.rpt a]
+				foreach element $GGALGGEUM {
+					puts $rpt $element
+				}
+					close $rpt
+					unset GGALGGEUM
+			}
+			lappend file_name "$from.rpt"
+		} else {
+			if {[file exists $from\_to_$to.rpt] == 0} {
+				set rpt [open $from\_to_$to.rpt w]
+				foreach element $GGALGGEUM {
+					puts $rpt $element
+				}
+					close $rpt
+					unset GGALGGEUM
+			} elseif {[file exists $from\_to_$to.rpt] == 1} {
+				set rpt [open $from\_to_$to.rpt a]
+				foreach element $GGALGGEUM {
+					puts $rpt $element
+				}
+					close $rpt
+					unset GGALGGEUM
+			}
+			lappend file_name "$from\_to_$to.rpt"
+		}
+	}
+}
+
+set file_name [lsort -unique -increasing $file_name]
+
+if {[file exists total_vio.rpt] == 0} {
+	set total [open total_vio.rpt w]
+		puts $total "path,min,max,min_wns,max_wns"
+	close $total
+}	
+
+foreach file_match $file_name {
+ 	set vio [open $file_match r]
+ 	set vh 0
+ 	set vs 0
+	set min_list {}
+	set max_list {}
+ 	while { [gets $vio vline] >= 0 } {
+ 		if {[regexp (min) $vline all p1] == 1} {
+ 			incr vh
+ 		} elseif {[regexp (max) $vline all p1] == 1} {
+ 			incr vs
+ 		} elseif {[regexp (slack) $vline all v1] == 1} {
+			set v [lindex $vline 2]
+			if { $p1 == "min" } {
+				lappend min_list $v
+			} elseif { $p1 == "max" } {
+				lappend max_list $v
+			}
+		}
+	}
+	if {[llength $min_list] + [llength $max_list] > 0} {
+		set min_list [lsort -decreasing $min_list]
+		set min_wns [lindex $min_list 0]
+		set max_list [lsort -decreasing $max_list]
+		set max_wns [lindex $max_list 0]
+			if { [llength $min_list] == 0 } {
+				set min_wns -
+			} elseif { [llength $max_list] == 0 } {
+				set max_wns -
+			}
+	}
+		set fname [ lindex [ split $file_match "." ] 0 ]
+ 		set sh_report [open total_vio.rpt a]
+ 		puts $sh_report "$fname,$vh,$vs,$min_wns,$max_wns"
+ 		close $sh_report
+}
