@@ -1,0 +1,35 @@
+void Fan_Output() {
+  int GasStatus = 0;
+  int SensorVal = analogRead(GasStatus);
+  Serial.println(SensorVal);
+  SensorVal = ((double)SensorVal / 900) * 100;  // 퍼센트 표시 위해
+  lcd.setCursor(9, 0); 
+  lcd.print(SensorVal);
+  if(SensorVal >= 75){  // 센서 값이 75보다 클때
+    //digitalWrite(Relay_1, HIGH);
+    digitalWrite(Relay_LED_1, HIGH);  // 전부 동작
+    digitalWrite(Relay_2, HIGH);
+    digitalWrite(Relay_LED_2, HIGH);
+    digitalWrite(Relay_3, HIGH);
+    digitalWrite(Relay_LED_3, HIGH);
+    LcdStatus = 2;  // 이 값에 의해 밑에 스위치문 동작
+  }
+  else if(SensorVal >= 20){ // 센서 값이 75~20 일때
+    //digitalWrite(Relay_1, HIGH);
+    digitalWrite(Relay_LED_1, HIGH);    // 3번째 빼고 전부 동작
+    digitalWrite(Relay_2, HIGH);
+    digitalWrite(Relay_LED_2, HIGH);
+    digitalWrite(Relay_3, LOW);
+    digitalWrite(Relay_LED_3, LOW);
+    LcdStatus = 1;
+  }
+  else{   // 평상시에는 1번만 동작
+    //digitalWrite(Relay_1, HIGH);
+    digitalWrite(Relay_LED_1, HIGH);
+    digitalWrite(Relay_2, LOW);
+    digitalWrite(Relay_LED_2, LOW);
+    digitalWrite(Relay_3, LOW);
+    digitalWrite(Relay_LED_3, LOW);
+    LcdStatus = 0;
+  }
+}
